@@ -144,6 +144,7 @@ normalize <- function(x){
 }
 concrete <- as.data.frame(lapply(concrete, normalize))
 
+
 # max_index <- length(concrete$strength)
 # slice_index <- round(max_index*0.75)
 # concrete_train <- concrete[1:slice_index,]
@@ -178,7 +179,6 @@ data.frame(actual = con_y[con_test,, drop= F], predict = con_predict, error = (c
 
 plot(as.vector(con_y[con_test,, drop= F]), col = 'blue', type = 'l')
 lines(as.vector(con_predict), col = 'red', type = 'l')
-
 
 
 
