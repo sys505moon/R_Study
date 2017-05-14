@@ -132,6 +132,61 @@ plot(as.vector(x_model$error), type = 'l', col = 'red')
 
 
 
+# application nnet data to RNN package ------------------------------------
+
+setwd("/home/moon/R/study")
+concrete <- read.csv("concrete.csv", stringsAsFactors = F)[-1]
+
+library(rnn)
+  # 데이터 정규화
+normalize <- function(x){
+  return((x-min(x))/(max(x)-min(x)))
+}
+concrete <- as.data.frame(lapply(concrete, normalize))
+
+max_index <- length(concrete$strength)
+slice_index <- round(max_index*0.75)
+concrete_train <- concrete[1:slice_index,]
+concrete_test <- concrete[slice_index:max_index,]
+
+x1 <- as.matrix(concrete[2])
+x2 <- as.matrix(concrete[3])
+x3 <- as.matrix(concrete[4])
+x4 <- as.matrix(concrete[5])
+x5 <- as.matrix(concrete[6])
+x6 <- as.matrix(concrete[7])
+x7 <- as.matrix(concrete[8])
+x8 <- as.matrix(concrete[9])
+
+y1 <- as.matrix(concrete[1])
+
+con_x <- array(c(x1,x2,x3,x4,x5,x6,x7,x8), dim = c(dim(x1), 8))
+con_y <- array(y1, dim = dim(y1))
+
+con_train <- 1:700
+con_test <- 701:1030
+
+con_model <- trainr(Y = con_y[con_train,, drop = F],
+                    X = con_x[con_train,,, drop = F],
+                    learningrate = 0.1,
+                    hidden_dim = 10,
+                    batch_size = 1,
+                    numepochs = 200)
+
+con_predict <- predictr(con_model, con_x[con_test,,, drop = F])
+data.frame(actual = con_y[con_test,, drop= F], predict = con_predict)
+
+plot(as.vector(con_y[con_test,, drop= F]), col = 'blue', type = 'l')
+lines(as.vector(con_predict), col = 'red', type = 'l')
+
+
+model.nnet.concrete <- nnet(strength ~., data = concrete_train, size = 3, decay = 5e-04)
+nnet.concrete.predict <- predict(model.nnet.concrete, concrete_test, type = 'raw')
+compare_concrete <- cbind(nnet.concrete.predict, concrete_test$strength)
+colnames(compare_concrete) <- c("predict", "actual")
+compare_concrete <- transform(compare_concrete, diff = predict-actual)
+
+
 
 
 
