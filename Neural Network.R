@@ -43,6 +43,7 @@ wine_actual <- wine_test$Type
 table(wine_predict, wine_actual)
 
 ### concrete 데이터 이용 예제 (분류가 아닌 연속형 Y 의 예측값 분석) *** 중요 ***
+library(nnet)
 concrete <- read.csv("concrete.csv", stringsAsFactors = F)[-1]
 
  # 데이터 정규화
@@ -61,7 +62,12 @@ nnet.concrete.predict <- predict(model.nnet.concrete, concrete_test, type = 'raw
 compare_concrete <- cbind(nnet.concrete.predict, concrete_test$strength)
 colnames(compare_concrete) <- c("predict", "actual")
 compare_concrete <- transform(compare_concrete, diff = predict-actual)
-d
+
+plot(as.vector(nnet.concrete.predict), col = 'blue', type = 'l')
+lines(as.vector(concrete_test$strength), col = 'red', type = 'l')
+
+plot(as.vector(compare_concrete$diff), col = 'black', type = 'l')
+
 ### 'neuralnet' package를 이용한 신경망 분석석
 
  # strength 를 예측하는 신경망 분석
