@@ -133,6 +133,7 @@ plot(as.vector(x_model$error), type = 'l', col = 'red')
 
 
 # application nnet data to RNN package ------------------------------------
+# 유사한 코드 주석은 input data의 형태에 대해 실험해 보고자 한 것
 
 setwd("/home/moon/R/study")
 concrete <- read.csv("concrete.csv", stringsAsFactors = F)[-1]
@@ -161,11 +162,29 @@ x8 <- as.matrix(concrete[8])
 
 y1 <- as.matrix(concrete[9])
 
+# x1 <- t(concrete[1])
+# x2 <- t(concrete[2])
+# x3 <- t(concrete[3])
+# x4 <- t(concrete[4])
+# x5 <- t(concrete[5])
+# x6 <- t(concrete[6])
+# x7 <- t(concrete[7])
+# x8 <- t(concrete[8])
+# 
+# y1 <- t(concrete[9])
+
 con_x <- array(c(x1,x2,x3,x4,x5,x6,x7,x8), dim = c(dim(x1), 8))
 con_y <- array(y1, dim = dim(y1))
 
 con_train <- 1:700
 con_test <- 701:1030
+
+# con_model <- trainr(Y = con_y[,con_train, drop = F],
+#                     X = con_x[,con_train,, drop = F],
+#                     learningrate = 0.1,
+#                     hidden_dim = 10,
+#                     batch_size = 1,
+#                     numepochs = 300)
 
 con_model <- trainr(Y = con_y[con_train,, drop = F],
                     X = con_x[con_train,,, drop = F],
@@ -174,12 +193,20 @@ con_model <- trainr(Y = con_y[con_train,, drop = F],
                     batch_size = 1,
                     numepochs = 200)
 
+
+
+# con_predict <- predictr(con_model, con_x[,con_test,, drop = F])
+# data.frame(actual = t(con_y[,con_test, drop= F]), predict = t(con_predict), error = t((con_y[,con_test, drop= F])-(con_predict)))
+
 con_predict <- predictr(con_model, con_x[con_test,,, drop = F])
 data.frame(actual = con_y[con_test,, drop= F], predict = con_predict, error = (con_y[con_test,, drop= F])-(con_predict))
 
+
+# plot(as.vector(con_y[,con_test, drop= F]), col = 'blue', type = 'l')
+# lines(as.vector(con_predict), col = 'red', type = 'l')
+
 plot(as.vector(con_y[con_test,, drop= F]), col = 'blue', type = 'l')
 lines(as.vector(con_predict), col = 'red', type = 'l')
-
 
 
 
