@@ -103,30 +103,50 @@ hist(B-(A1+A2))
 
 
 
-x1 <- t(scale(x_AAPL[3]))
-x2 <- t(scale(x_AAPL[4]))
-x3 <- t(scale(x_AAPL[5]))
-x4 <- t(scale(x_AAPL[6]))
+# x1 <- t(scale(x_AAPL[3]))
+# x2 <- t(scale(x_AAPL[4]))
+# x3 <- t(scale(x_AAPL[5]))
+# x4 <- t(scale(x_AAPL[6]))
 
+x_AAPL_rnn_data <- as.data.frame(lapply(x_AAPL[2:6], normalize))
+
+x1 <- as.matrix(x_AAPL_rnn_data[2])
+x2 <- as.matrix(x_AAPL_rnn_data[3])
+x3 <- as.matrix(x_AAPL_rnn_data[4])
+x4 <- as.matrix(x_AAPL_rnn_data[5])
 
 x <- array(c(x1,x2,x3,x4), dim = c(dim(x1), 4))
-y <- array(t(scale(x_AAPL[2])), dim = dim(x1))
+y <- array(as.matrix(x_AAPL_rnn_data[1]), dim = dim(x1))
+
+# x <- array(c(x1,x2,x3,x4), dim = c(dim(x1), 4))
+# y <- array(t(scale(x_AAPL[2])), dim = dim(x1))
 
 x_train <- 1:180
 x_test <- 181:204
 
-x_model <- trainr(Y = y[,x_train, drop = F],
-                  X = x[,x_train,, drop = F],
+x_model <- trainr(Y = y[x_train,, drop = F],
+                  X = x[x_train,,, drop = F],
                   learningrate = 0.1,
                   hidden_dim = 10,
                   batch_size = 1,
                   numepochs = 500)
 
-x_predict <- predictr(x_model, x[,x_test,, drop = F])
+# x_model <- trainr(Y = y[,x_train, drop = F],
+#                   X = x[,x_train,, drop = F],
+#                   learningrate = 0.1,
+#                   hidden_dim = 10,
+#                   batch_size = 1,
+#                   numepochs = 500)
 
 
-plot(as.vector(t(y[,x_test])), col = 'red', type = 'l', main = 'Actual vs Predicted')
+x_predict <- predictr(x_model, x[x_test,,, drop = F])
+# x_predict <- predictr(x_model, x[,x_test,, drop = F])
+
+data.frame(actual = y[x_test,], predicted = x_predict, error = (y[x_test,]-x_predict))
+
+plot(as.vector(t(y[x_test,])), col = 'red', type = 'l', main = 'Actual vs Predicted')
 lines(as.vector(x_predict), type = 'l', col = 'blue' )
+
 
 plot(as.vector(x_model$error), type = 'l', col = 'red')
 
@@ -144,7 +164,7 @@ normalize <- function(x){
   return((x-min(x))/(max(x)-min(x)))
 }
 concrete <- as.data.frame(lapply(concrete, normalize))
-
+# concrete <- as.data.frame(lapply(concrete, scale)) # scale로 자료 표준화하면 예측값이 좋지 않음 : 하면안됨
 
 # max_index <- length(concrete$strength)
 # slice_index <- round(max_index*0.75)
