@@ -100,23 +100,26 @@ B <- bin2int(B)
 hist(B-(A1+A2))
 
                   ############# application neural network data to RNN ##################
-
-
-
-# x1 <- t(scale(x_AAPL[3]))
-# x2 <- t(scale(x_AAPL[4]))
-# x3 <- t(scale(x_AAPL[5]))
-# x4 <- t(scale(x_AAPL[6]))
+library(rnn)
+normalize <- function(x){
+  return((x-min(x))/(max(x)-min(x)))
+}
 
 x_AAPL_rnn_data <- as.data.frame(lapply(x_AAPL[2:6], normalize))
 
-x1 <- as.matrix(x_AAPL_rnn_data[2])
-x2 <- as.matrix(x_AAPL_rnn_data[3])
-x3 <- as.matrix(x_AAPL_rnn_data[4])
-x4 <- as.matrix(x_AAPL_rnn_data[5])
+# x1 <- as.matrix(x_AAPL_rnn_data[2])
+# x2 <- as.matrix(x_AAPL_rnn_data[3])
+# x3 <- as.matrix(x_AAPL_rnn_data[4])
+# x4 <- as.matrix(x_AAPL_rnn_data[5])
+
+x1 <- t(x_AAPL_rnn_data[2])
+x2 <- t(x_AAPL_rnn_data[3])
+x3 <- t(x_AAPL_rnn_data[4])
+x4 <- t(x_AAPL_rnn_data[5])
+
 
 x <- array(c(x1,x2,x3,x4), dim = c(dim(x1), 4))
-y <- array(as.matrix(x_AAPL_rnn_data[1]), dim = dim(x1))
+y <- array(t(x_AAPL_rnn_data[1]), dim = dim(x1))
 
 # x <- array(c(x1,x2,x3,x4), dim = c(dim(x1), 4))
 # y <- array(t(scale(x_AAPL[2])), dim = dim(x1))
@@ -124,27 +127,89 @@ y <- array(as.matrix(x_AAPL_rnn_data[1]), dim = dim(x1))
 x_train <- 1:180
 x_test <- 181:204
 
-x_model <- trainr(Y = y[x_train,, drop = F],
-                  X = x[x_train,,, drop = F],
-                  learningrate = 0.1,
-                  hidden_dim = 10,
-                  batch_size = 1,
-                  numepochs = 500)
-
-# x_model <- trainr(Y = y[,x_train, drop = F],
-#                   X = x[,x_train,, drop = F],
+# x_model <- trainr(Y = y[x_train,, drop = F],
+#                   X = x[x_train,,, drop = F],
 #                   learningrate = 0.1,
 #                   hidden_dim = 10,
 #                   batch_size = 1,
 #                   numepochs = 500)
 
+x_model <- trainr(Y = y[,x_train, drop = F],
+                  X = x[,x_train,, drop = F],
+                  learningrate = 0.035,
+                  hidden_dim = 14,
+                  batch_size = 1,
+                  numepochs = 3400,
+                  network_type = "lstm")
 
-x_predict <- predictr(x_model, x[x_test,,, drop = F])
-# x_predict <- predictr(x_model, x[,x_test,, drop = F])
+x_predict_lstm <- predict_lstm(x_model, x[,x_test,, drop = F])
 
-data.frame(actual = y[x_test,], predicted = x_predict, error = (y[x_test,]-x_predict))
+#     ######### 반복문으로 최적 hidden_dim 찾기 ########### learning_rate = 0.1 / numepoch = 200
+# 
+# search_hidden = c()
+# for(i in seq(5, 30)){
+#   x_model <- trainr(Y = y[,x_train, drop = F],
+#                     X = x[,x_train,, drop = F],
+#                     learningrate = 0.1,
+#                     hidden_dim = i,
+#                     batch_size = 1,
+#                     numepochs = 200)
+#   print(i)
+#   x_predict <- predictr(x_model, x[,x_test,, drop = F])
+#   search_hidden = c(search_hidden, mean(data.frame(actual = y[,x_test], predicted = t(x_predict), error = (y[,x_test])-t(x_predict))$error))
+#   
+# }
+# search_hidden_dim = data.frame(hidden_dim = seq(5, 30), mean_error = search_hidden)
+# write.csv(search_hidden_dim, "search_hidden_dim.csv")
+# 
+#     ######### 반복문으로 최적 learning_rate 찾기 ########### hidden_dim = 14 / numepoch = 200
+# 
+# search_learning = c()
+# for(i in seq(0.001, 0.1, by = 0.001)){
+#   x_model <- trainr(Y = y[,x_train, drop = F],
+#                     X = x[,x_train,, drop = F],
+#                     learningrate = i,
+#                     hidden_dim = 14,
+#                     batch_size = 1,
+#                     numepochs = 200)
+#   print(i)
+#   x_predict <- predictr(x_model, x[,x_test,, drop = F])
+#   search_learning = c(search_learning, mean(data.frame(actual = y[,x_test], predicted = t(x_predict), error = (y[,x_test])-t(x_predict))$error))
+# }
+# search_learning_rate = data.frame(learning_rate = seq(0.001, 0.1, by = 0.001), mean_error = search_learning)
+# write.csv(search_learning_rate, "search_learning_rate.csv")
+# 
+#     ######### 반복문으로 최적 numepoch 찾기 ########### hidden_dim = 14 / learning_rate = 0.035
+# 
+# search_epoch = c()
+# for(i in seq(100, 5200, by = 300)){
+#   x_model <- trainr(Y = y[,x_train, drop = F],
+#                     X = x[,x_train,, drop = F],
+#                     learningrate = 0.035,
+#                     hidden_dim = 14,
+#                     batch_size = 1,
+#                     numepochs = i)
+#   print(i)
+#   x_predict <- predictr(x_model, x[,x_test,, drop = F])
+#   search_epoch = c(search_epoch, mean(data.frame(actual = y[,x_test], predicted = t(x_predict), error = (y[,x_test])-t(x_predict))$error))
+# }
+# search_numepoch = data.frame(numepoch = seq(100, 5200, by = 300), mean_error = search_epoch)
+# write.csv(search_numepoch, "search_numepoch.csv")
 
-plot(as.vector(t(y[x_test,])), col = 'red', type = 'l', main = 'Actual vs Predicted')
+
+
+
+
+
+
+# x_predict <- predictr(x_model, x[x_test,,, drop = F])
+x_predict <- predictr(x_model, x[,x_test,, drop = F])
+
+# data.frame(actual = y[x_test,], predicted = x_predict, error = (y[x_test,]-x_predict))
+data.frame(actual = y[,x_test], predicted = t(x_predict), error = (y[,x_test])-t(x_predict))
+
+# plot(as.vector(t(y[x_test,])), col = 'red', type = 'l', main = 'Actual vs Predicted')
+plot(as.vector(t(y[,x_test])), col = 'red', type = 'l', main = 'Actual vs Predicted')
 lines(as.vector(x_predict), type = 'l', col = 'blue' )
 
 
@@ -227,10 +292,6 @@ data.frame(actual = con_y[con_test,, drop= F], predict = con_predict, error = (c
 
 plot(as.vector(con_y[con_test,, drop= F]), col = 'blue', type = 'l')
 lines(as.vector(con_predict), col = 'red', type = 'l')
-
-
-
-
 
 
 
